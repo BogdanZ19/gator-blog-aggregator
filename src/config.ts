@@ -1,37 +1,53 @@
 import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
-import { config } from 'node:process';
 
-type Config = {
-  dbUrl: string;
-  currentUserName: string;
+export type Config = {
+    dbUrl: string;
+    currentUserName: string;
 };
 
-export function setUser() {
+export function setUser(userName: string) {
+    const cfg: Config = readConfig();
+    cfg.currentUserName = userName;
 
+    writeConfig(cfg);
+}
+
+function validateConfig(rawConfig: any) {
+    if (!rawConfig.db_url || typeof rawConfig.db_url !== "string") {
+        throw new Error("db_url field is not set correctly")
+    }
+
+    const config: Config = {
+        dbUrl: rawConfig.db_url,
+        currentUserName: rawConfig.current_user_name ?? "",
+    };
+
+    return config;
 }
 
 export function readConfig(): Config {
-    const cfg = JSON.parse(getConfigFilePath());
-    return cfg;
+    const data = fs.readFileSync(getConfigFilePath(), 'utf-8');
+    const rawConfig = JSON.parse(data);
+
+    return validateConfig(rawConfig);
 }
 
 function getConfigFilePath(): string {
-    return path.join(os.homedir(), ".gatorconfig.json");
-    
+    const configFileName = ".gatorconfig.json";
+    const homeDir = os.homedir();
+
+    return path.join(homeDir, configFileName);
 }
 
-function writeConfig(cfg: Config): void {
-    fs.writeFile(getConfigFilePath(), JSON.stringify(cfg), err => {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log("config written successfully")
-        }
-    });
-}
+function writeConfig(config: Config): void {
+    const rawConfig = {
+        db_url: config.dbUrl,
+        current_user_name: config.currentUserName,
+    }
 
-// function validateConfig(rawConfig: any): Config {
-//     return 
-// }
+    const data = JSON.stringify(rawConfig)
+
+    fs.writeFileSync(getConfigFilePath(), data, { encoding: "utf8" });
+}
