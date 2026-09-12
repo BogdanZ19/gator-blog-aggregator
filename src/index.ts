@@ -2,7 +2,7 @@ import { CommandsRegistry, registerCommand, runCommand } from "./commands/comman
 import { handlerLogin } from "./commands/users.js";
 import { Config, readConfig, setUser } from "./config.js";
 
-function main() {
+async function main() {
     // setUser("test");
     // const cfg: Config = readConfig();
     // console.log(cfg)
@@ -19,7 +19,9 @@ function main() {
     const cmdRegistry: CommandsRegistry = {};
     
     registerCommand(cmdRegistry, "login", handlerLogin);
-    runCommand(cmdRegistry, commandName, ...cmdArgs);
+    await runCommand(cmdRegistry, commandName, ...cmdArgs);
+
+    process.exit(0)
 }       
 
 main();
